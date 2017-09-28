@@ -1,5 +1,5 @@
 {
-  "name": "nexusnetsoft/library-filetransfer",
+  "name": "phizzl/ssh2-client",
   "description": "Library for transfering files",
   "license": "proprietary",
   "minimum-stability": "stable",

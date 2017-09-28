@@ -28,23 +28,50 @@ class SshClient
     }
 
     /**
-     * @return string
-     */
-    private function getSftpUrl()
-    {
-        $connectionId = intval($this->sftpSession->getSession());
-        return "ssh2.sftp://{$connectionId}/";
-    }
-
-    /**
      * @param string $path
      * @return string
      */
     private function translatePath($path)
     {
         return substr($path, 0, 1) === '~'
-            ? $this->getHomeDirectory() . substr($path, 2)
+            ? $this->getHomeDirectory() . substr($path, 1)
             : $path;
+    }
+
+    /**
+     * @return string
+     */
+    private function getSftpProtocol()
+    {
+        return "ssh2.sftp://";
+    }
+
+    /**
+     * @return string
+     */
+    private function getSftpBaseUrl()
+    {
+        $connectionId = intval($this->sftpSession->getSession());
+        return $this->getSftpProtocol() . "{$connectionId}";
+    }
+
+    /**
+     * @param string $str
+     * @return bool|string
+     */
+    private function removeSftpBaseUrlFromString($str)
+    {
+        return substr($str, 0, strlen($this->getSftpBaseUrl())) === $this->getSftpBaseUrl()
+            ? substr($str, strlen($this->getSftpBaseUrl()))
+            : $str;
+    }
+
+    /**
+     * @return string
+     */
+    private function getSftpUrl($path = '')
+    {
+        return $this->getSftpBaseUrl() . $this->translatePath($path);
     }
 
     /**
@@ -58,21 +85,84 @@ class SshClient
     /**
      * @param string $path
      * @return array
-     * @throws ConnectionException
+     * @throws SftpException
      */
     public function listDirectory($path)
     {
         $listing = [];
-        $path = $this->translatePath($path);
 
-        if(($handle = opendir("{$this->getSftpUrl()}{$path}")) === false){
-            throw new ConnectionException("Could not open dir \"{$path}\"");
+        $sftpUrl = $this->getSftpUrl($path);
+
+        if(!$this->isDir($path)){
+            throw new \LogicException("\"{$path} must be a directory\"");
         }
 
-        while($entry = readdir($handle)){
-            $listing[] = $entry;
+        foreach(new SftpDirectoryIterator($sftpUrl) as $item){
+            $listing[] = $this->removeSftpBaseUrlFromString($item->getPathname());
         }
 
         return $listing;
+    }
+
+    /**
+     * @param string $path
+     * @return bool
+     */
+    public function isDir($path)
+    {
+        $sftpUrl = $this->getSftpUrl($path);
+        return \is_dir($this->translatePath($sftpUrl));
+    }
+
+    /**
+     * @param string $path
+     * @return bool
+     */
+    public function isFile($path)
+    {
+        $sftpUrl = $this->getSftpUrl($path);
+        return \is_file($this->translatePath($sftpUrl));
+    }
+
+    /**
+     * @param string $path
+     * @return bool
+     */
+    public function fileExists($path)
+    {
+        $sftpUrl = $this->getSftpUrl($path);
+        return file_exists($this->translatePath($sftpUrl));
+    }
+
+    /**
+     * @param string $path
+     * @param string $localTarget
+     * @return bool
+     * @throws SftpException
+     */
+    public function receive($path, $localTarget)
+    {
+        $sftpUrl = $this->getSftpUrl($path);
+        if(copy($sftpUrl, $localTarget) === false){
+            throw new SftpException("Could not receive \"{$path}\"");
+        }
+
+        return true;
+    }
+
+    /**
+     * @param string $localSource
+     * @param string $path
+     * @return bool
+     * @throws SftpException
+     */
+    public function send($localSource, $path)
+    {
+        $sftpUrl = $this->getSftpUrl($path);
+        if(copy($localSource, $sftpUrl) === false){
+            throw new SftpException("Could not send \"{$localSource}\"");
+        }
+
+        return true;
     }
 }
