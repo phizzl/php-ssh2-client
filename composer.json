@@ -17,5 +17,7 @@
       "Phizzl\\Ssh2\\": "src/"
     }
   },
-  "require": {}
+  "require": {
+    "monolog/monolog": "^1.23"
+  }
 }
