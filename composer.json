@@ -1,0 +1,21 @@
+{
+  "name": "nexusnetsoft/library-filetransfer",
+  "description": "Library for transfering files",
+  "license": "proprietary",
+  "minimum-stability": "stable",
+  "keywords": ["file", "transfer"],
+  "type": "library",
+  "authors": [
+    {
+      "name": "Phillip Schleicher",
+      "email": "schleicher@nexus-netsoft.com",
+      "role": "Developer"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "Phizzl\\Ssh2\\": "src/"
+    }
+  },
+  "require": {}
+}
