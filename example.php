@@ -6,7 +6,7 @@ use Phizzl\Ssh2\SshSession;
 
 require 'vendor/autoload.php';
 
-$sshSession = new SshSession("m20701.wwwsrv.eu", 22, new PasswordAuthentication("desigdbi", "Go4designphp123!"));
+$sshSession = new SshSession("m20701.wwwsrv.eu", 22, new PasswordAuthentication("vagrant", "vagrant!"));
 $sshClient = new SshClient($sshSession);
 
 var_dump($sshClient->sendFile(__DIR__ . '/../.bashrc', '~/trololo.txt'));
